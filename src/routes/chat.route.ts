@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import z from "zod";
-import { createChat, queryChat } from "../constroller/chat.controller";
+import { createChat, queryChat } from "../controller/chat.controller";
 import { CreateChatError, CreateChatInDBError } from "../exceptions/chat.exceptions";
 import { authMiddleware } from "../middleware/authentication.middleware";
 

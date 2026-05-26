@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import z from "zod";
-import { loginUser } from "../constroller/user.controller";
+import { loginUser } from "../controller/user.controller";
 import { CreateUserInDBError, GetUserByEmailFromDBError, LoginUserError } from "../exceptions/user.exceptions";
 
 const userRoute = new Hono();

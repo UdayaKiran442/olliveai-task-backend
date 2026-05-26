@@ -3,7 +3,7 @@ import { ConvertToEmbeddingsServiceError, QueryChatError } from "../exceptions/o
 import { createChatInDB } from "../repository/chat.repository";
 import type { IChatQuerySchema } from "../routes/chat.route";
 import { convertToEmbeddingsService } from "../services/openai.service";
-import { queryPineconeService, upsertEmbeddingsToPineconeService } from "../services/pinecone.service";
+import { queryPineconeService } from "../services/pinecone.service";
 
 export async function createChat(payload: { userId: string }) {
 	try {
