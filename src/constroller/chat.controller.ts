@@ -3,6 +3,7 @@ import { ConvertToEmbeddingsServiceError, QueryChatError } from "../exceptions/o
 import { createChatInDB } from "../repository/chat.repository";
 import type { IChatQuerySchema } from "../routes/chat.route";
 import { convertToEmbeddingsService } from "../services/openai.service";
+import { queryPineconeService, upsertEmbeddingsToPineconeService } from "../services/pinecone.service";
 
 export async function createChat(payload: { userId: string }) {
 	try {
@@ -21,7 +22,11 @@ export async function queryChat(payload: IChatQuerySchema) {
 		const embeddings = await convertToEmbeddingsService(payload.query);
 
 		// retreive relevant past messages from the same chat using the embeddings from vector db
-
+		const history = await queryPineconeService({
+			chatId: payload.chatId,
+			indexName: "olliveai-task",
+			promptVector: embeddings,
+		});
 		// send the query, along with the relevant past messages to the llm and get the response
 
 		// save the query, response
