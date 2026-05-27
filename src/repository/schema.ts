@@ -36,6 +36,7 @@ export const messageMetadata = pgTable("message_metadata", {
 	messageId: varchar("message_id").notNull(),
 	chatId: varchar("chat_id").notNull(),
 	prompt: varchar("prompt").notNull(),
+	userId: varchar("user_id").notNull(),
 	response: varchar("response").notNull(),
 	tokens: integer("tokens").notNull(),
 	provider: varchar("provider").notNull(),

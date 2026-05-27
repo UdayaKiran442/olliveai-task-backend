@@ -1,0 +1,1 @@
+ALTER TABLE "message_metadata" ALTER COLUMN "user_id" SET NOT NULL;

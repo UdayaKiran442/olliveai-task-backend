@@ -36,6 +36,20 @@
       "when": 1779867033841,
       "tag": "0004_cheerful_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779876232245,
+      "tag": "0005_shiny_hydra",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779876311935,
+      "tag": "0006_crazy_spiral",
+      "breakpoints": true
     }
   ]
 }

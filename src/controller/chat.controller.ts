@@ -88,6 +88,7 @@ export async function queryChat(payload: IChatQuerySchema) {
 			provider: payload.provider,
 			model: payload.model,
 			requestId: response.requestId,
+			userId: payload.userId,
 		});
 		// return the response
 		return response.response;
