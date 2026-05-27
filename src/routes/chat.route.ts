@@ -107,9 +107,9 @@ chatRoute.post("/history", async (c) => {
 	}
 });
 
-chatRoute.get("/all-chats", async (c) => {
+chatRoute.get("/all-chats", authMiddleware, async (c) => {
 	try {
-		const userId = "user_3EFRtfVOgds9cLzWGFQzvXgebj0";
+		const userId = c.get("user").userId;
 		const chats = await getAllUserChats(userId);
 		return c.json({ success: true, chats });
 	} catch (error) {
