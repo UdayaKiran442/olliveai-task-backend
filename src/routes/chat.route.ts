@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import z from "zod";
-import { createChat, getChatHistory, queryChat } from "../controller/chat.controller";
-import { CreateChatError, CreateChatInDBError, GetChatByIdFromDBError, GetChatHistoryError } from "../exceptions/chat.exceptions";
+import { createChat, getAllUserChats, getChatHistory, queryChat } from "../controller/chat.controller";
+import { CreateChatError, CreateChatInDBError, GetChatByIdFromDBError, GetChatHistoryError, GetUserChatsError, GetUserChatsFromDBError } from "../exceptions/chat.exceptions";
 import { authMiddleware } from "../middleware/authentication.middleware";
 import { ConvertToEmbeddingsServiceError, QueryChatError } from "../exceptions/openai.exceptions";
 import { QueryPineconeServiceError, UpsertEmbeddingsToPineconeServiceError } from "../exceptions/pinecone.exceptions";
@@ -106,5 +106,18 @@ chatRoute.post("/history", async (c) => {
 		return c.json({ success: false, error: (error as Error).message }, 500);
 	}
 });
+
+chatRoute.get("/all-chats", async (c) => {
+	try {
+		const userId = "user_3EFRtfVOgds9cLzWGFQzvXgebj0";
+		const chats = await getAllUserChats(userId);
+		return c.json({ success: true, chats });
+	} catch (error) {
+		if (error instanceof GetUserChatsFromDBError || error instanceof GetUserChatsError) {
+			return c.json({ success: false, error: error.message }, 401);
+		}
+		return c.json({ success: false, error: (error as Error).message }, 500);
+	}
+}); 
 
 export default chatRoute;

@@ -1,11 +1,11 @@
-import { CreateChatError, CreateChatInDBError, GetChatByIdFromDBError, GetChatHistoryError } from "../exceptions/chat.exceptions";
+import { CreateChatError, CreateChatInDBError, GetChatByIdFromDBError, GetChatHistoryError, GetUserChatsError, GetUserChatsFromDBError } from "../exceptions/chat.exceptions";
 import { NotFoundError, UnauthorizedAccessError } from "../exceptions/common.exceptions";
 import { QueryChatLLMError } from "../exceptions/llm.exceptions";
 import { AddChatMessagesToDBError } from "../exceptions/message.exceptions";
 import { AddMessageMetadataToDBError } from "../exceptions/messageMetadata.exceptions";
 import { ConvertToEmbeddingsServiceError, QueryChatError } from "../exceptions/openai.exceptions";
 import { QueryPineconeServiceError, UpsertEmbeddingsToPineconeServiceError } from "../exceptions/pinecone.exceptions";
-import { createChatInDB, getChatByIdFromDB } from "../repository/chat.repository";
+import { createChatInDB, getAllUserChatsFromDB, getChatByIdFromDB } from "../repository/chat.repository";
 import { addMessageMetadataToDB } from "../repository/messageMetadata.repository";
 import { addChatMessagesToDB, getChatMessagesFromDB } from "../repository/messages.repository";
 import type { IChatHistorySchema, IChatQuerySchema } from "../routes/chat.route";
@@ -105,5 +105,16 @@ export async function queryChat(payload: IChatQuerySchema) {
 		}
 		console.error(error);
 		throw new QueryChatError("Failed to query chat", { cause: (error as Error).message });
+	}
+}
+
+export async function getAllUserChats(userId: string) {
+	try {
+		return await getAllUserChatsFromDB(userId);
+	} catch (error) {
+		if (error instanceof GetUserChatsFromDBError) {
+			throw error;
+		}
+		throw new GetUserChatsError("Failed to get user chats", { cause: (error as Error).message });
 	}
 }

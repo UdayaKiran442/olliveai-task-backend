@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import db from "./db";
 import { chat } from "./schema";
-import { CreateChatInDBError, GetChatByIdFromDBError } from "../exceptions/chat.exceptions";
+import { CreateChatInDBError, GetChatByIdFromDBError, GetUserChatsFromDBError } from "../exceptions/chat.exceptions";
 import { eq } from "drizzle-orm";
 
 export async function createChatInDB(payload: { userId: string }) {
@@ -25,5 +25,13 @@ export async function getChatByIdFromDB(chatId: string) {
 		return chatDetails[0];
 	} catch (error) {
 		throw new GetChatByIdFromDBError("Failed to get chat by ID from DB", { cause: (error as Error).message });
+	}
+}
+
+export async function getAllUserChatsFromDB(userId: string) {
+	try {
+		return await db.select().from(chat).where(eq(chat.userId, userId));
+	} catch (error) {
+		throw new GetUserChatsFromDBError("Failed to get user chats from DB", { cause: (error as Error).message });
 	}
 }
