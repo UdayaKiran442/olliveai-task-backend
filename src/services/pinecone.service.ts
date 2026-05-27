@@ -47,6 +47,7 @@ export async function queryPineconeService(payload: { indexName: string; chatId:
 		}
 		return history;
 	} catch (error) {
+		console.error("Error querying Pinecone:", error);
 		throw new QueryPineconeServiceError("Failed to query pinecone", { cause: (error as Error).message });
 	}
 }
