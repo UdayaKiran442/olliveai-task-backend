@@ -1,12 +1,13 @@
 import { Hono } from "hono";
 import z from "zod";
-import { createChat, queryChat } from "../controller/chat.controller";
-import { CreateChatError, CreateChatInDBError } from "../exceptions/chat.exceptions";
+import { createChat, getChatHistory, queryChat } from "../controller/chat.controller";
+import { CreateChatError, CreateChatInDBError, GetChatByIdFromDBError, GetChatHistoryError } from "../exceptions/chat.exceptions";
 import { authMiddleware } from "../middleware/authentication.middleware";
 import { ConvertToEmbeddingsServiceError, QueryChatError } from "../exceptions/openai.exceptions";
 import { QueryPineconeServiceError, UpsertEmbeddingsToPineconeServiceError } from "../exceptions/pinecone.exceptions";
 import { AddChatMessagesToDBError } from "../exceptions/message.exceptions";
 import { QueryChatLLMError } from "../exceptions/llm.exceptions";
+import { NotFoundError, UnauthorizedAccessError } from "../exceptions/common.exceptions";
 
 const chatRoute = new Hono();
 
@@ -63,6 +64,42 @@ chatRoute.post("/query", async (c) => {
 			error instanceof QueryChatError
 		) {
 			return c.json({ success: false, error: error.message }, 401);
+		}
+		return c.json({ success: false, error: (error as Error).message }, 500);
+	}
+});
+
+const ChatHistorySchema = z.object({
+	chatId: z.string(),
+});
+
+export type IChatHistorySchema = z.infer<typeof ChatHistorySchema> & { userId: string };
+
+chatRoute.post("/history", async (c) => {
+	try {
+		const validation = ChatHistorySchema.safeParse(await c.req.json());
+		if (!validation.success) {
+			throw validation.error;
+		}
+		const payload = {
+			...validation.data,
+			userId: "user_3EFRtfVOgds9cLzWGFQzvXgebj0",
+		};
+		const messages = await getChatHistory(payload);
+		return c.json({ success: true, messages });
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			const errMessage = JSON.parse(error.message);
+			return c.json({ success: false, error: errMessage[0], message: errMessage[0].message }, 401);
+		}
+		if (error instanceof GetChatHistoryError || error instanceof GetChatByIdFromDBError) {
+			return c.json({ success: false, error: error.message }, 401);
+		}
+		if (error instanceof UnauthorizedAccessError) {
+			return c.json({ success: false, error: error.message }, 403);
+		}
+		if (error instanceof NotFoundError) {
+			return c.json({ success: false, error: error.message }, 404);
 		}
 		return c.json({ success: false, error: (error as Error).message }, 500);
 	}

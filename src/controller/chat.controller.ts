@@ -1,11 +1,12 @@
-import { CreateChatError, CreateChatInDBError } from "../exceptions/chat.exceptions";
+import { CreateChatError, CreateChatInDBError, GetChatByIdFromDBError, GetChatHistoryError } from "../exceptions/chat.exceptions";
+import { NotFoundError, UnauthorizedAccessError } from "../exceptions/common.exceptions";
 import { QueryChatLLMError } from "../exceptions/llm.exceptions";
 import { AddChatMessagesToDBError } from "../exceptions/message.exceptions";
 import { ConvertToEmbeddingsServiceError, QueryChatError } from "../exceptions/openai.exceptions";
 import { QueryPineconeServiceError, UpsertEmbeddingsToPineconeServiceError } from "../exceptions/pinecone.exceptions";
-import { createChatInDB } from "../repository/chat.repository";
-import { addChatMessagesToDB } from "../repository/messages.repository";
-import type { IChatQuerySchema } from "../routes/chat.route";
+import { createChatInDB, getChatByIdFromDB } from "../repository/chat.repository";
+import { addChatMessagesToDB, getChatMessagesFromDB } from "../repository/messages.repository";
+import type { IChatHistorySchema, IChatQuerySchema } from "../routes/chat.route";
 import { queryChatLLM } from "../services/llm.service";
 import { convertToEmbeddingsService } from "../services/openai.service";
 import { queryPineconeService, upsertEmbeddingsToPineconeService } from "../services/pinecone.service";
@@ -18,6 +19,24 @@ export async function createChat(payload: { userId: string }) {
 			throw error;
 		}
 		throw new CreateChatError("Failed to create new chat", { cause: (error as Error).message });
+	}
+}
+
+export async function getChatHistory(payload: IChatHistorySchema) {
+	try {
+		const chat = await getChatByIdFromDB(payload.chatId);
+		if (chat.userId !== payload.userId) {
+			throw new UnauthorizedAccessError("Unauthorized access to chat history");
+		}
+		if (!chat) {
+			throw new NotFoundError("Chat not found");
+		}
+		return await getChatMessagesFromDB(payload.chatId);
+	} catch (error) {
+		if (error instanceof GetChatByIdFromDBError || error instanceof NotFoundError || error instanceof UnauthorizedAccessError) {
+			throw error;
+		}
+		throw new GetChatHistoryError("Failed to get chat history", { cause: (error as Error).message });
 	}
 }
 
