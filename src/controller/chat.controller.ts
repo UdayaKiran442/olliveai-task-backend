@@ -91,7 +91,7 @@ export async function queryChat(payload: IChatQuerySchema) {
 			userId: payload.userId,
 		});
 		// return the response
-		return response.response;
+		return chatMessage;
 	} catch (error) {
 		if (
 			error instanceof ConvertToEmbeddingsServiceError ||

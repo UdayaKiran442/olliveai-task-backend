@@ -39,7 +39,7 @@ const ChatQuerySchema = z.object({
 
 export type IChatQuerySchema = z.infer<typeof ChatQuerySchema> & { userId: string };
 
-chatRoute.post("/query", async (c) => {
+chatRoute.post("/query", authMiddleware, async (c) => {
 	try {
 		const validation = ChatQuerySchema.safeParse(await c.req.json());
 		if (!validation.success) {
@@ -47,10 +47,10 @@ chatRoute.post("/query", async (c) => {
 		}
 		const payload = {
 			...validation.data,
-			userId: "user_3EFRtfVOgds9cLzWGFQzvXgebj0",
+			userId: c.get("user").userId,
 		};
-		const response = await queryChat(payload);
-		return c.json({ success: true, response });
+		const message = await queryChat(payload);
+		return c.json({ success: true, message });
 	} catch (error) {
 		if (error instanceof z.ZodError) {
 			const errMessage = JSON.parse(error.message);
@@ -77,7 +77,7 @@ const ChatHistorySchema = z.object({
 
 export type IChatHistorySchema = z.infer<typeof ChatHistorySchema> & { userId: string };
 
-chatRoute.post("/history", async (c) => {
+chatRoute.post("/history", authMiddleware, async (c) => {
 	try {
 		const validation = ChatHistorySchema.safeParse(await c.req.json());
 		if (!validation.success) {
@@ -85,7 +85,7 @@ chatRoute.post("/history", async (c) => {
 		}
 		const payload = {
 			...validation.data,
-			userId: "user_3EFRtfVOgds9cLzWGFQzvXgebj0",
+			userId: c.get("user").userId,
 		};
 		const messages = await getChatHistory(payload);
 		return c.json({ success: true, messages });
