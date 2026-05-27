@@ -41,13 +41,14 @@ export async function queryPineconeService(payload: { indexName: string; chatId:
 		}
 		let history = "";
 		for (const match of queryResponse.matches) {
-			const prompt = match?.metadata?.prompt;
-			const response = match?.metadata?.response;
-			history += `Prompt: ${prompt}\nResponse: ${response}`;
+			const text = match?.metadata?.text;
+			if (!text) {
+				continue;
+			}
+			history += `${text}\n`;
 		}
 		return history;
 	} catch (error) {
-		console.error("Error querying Pinecone:", error);
 		throw new QueryPineconeServiceError("Failed to query pinecone", { cause: (error as Error).message });
 	}
 }

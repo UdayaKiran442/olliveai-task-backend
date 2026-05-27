@@ -14,10 +14,12 @@ export async function generateSarvamResponse(payload: { prompt: any; model: stri
 			model: payload.model as any,
 			temperature: 0.7,
 		});
-		if (!response.choices[0].message.content) {
+		if (!response.choices[0].message.content || !response.usage || !response.id) {
 			throw new GenerateSarvamResponseError("Failed to generate response from Sarvam", { cause: "No content generated" });
 		}
-		return JSON.parse(response.choices[0].message.content);
+		const cleanedResponse = response.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "");
+		const parsedResponse = JSON.parse(cleanedResponse).response as string;
+		return { response: parsedResponse, tokens: response.usage.total_tokens, requestId: response.id };
 	} catch (error) {
 		if (error instanceof GenerateSarvamResponseError) {
 			throw error;

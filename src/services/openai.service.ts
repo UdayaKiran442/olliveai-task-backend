@@ -29,10 +29,14 @@ export async function generateOpenAIResponse(payload: { prompt: any; model: stri
 			},
 			temperature: 0.7,
 		});
+		if (!response.usage || !response._request_id) {
+			throw new GenerateOpenAIResponseError("Failed to generate response from OpenAI", { cause: "No usage data returned" });
+		}
 		if (!response.choices[0].message.content) {
 			throw new GenerateOpenAIResponseError("Failed to generate response from OpenAI", { cause: "No content generated" });
 		}
-		return JSON.parse(response.choices[0].message.content);
+		const parsedResponse = (JSON.parse(response.choices[0].message.content)).response as string;
+		return { response: parsedResponse, tokens: response.usage.total_tokens, requestId: response._request_id };
 	} catch (error) {
 		if (error instanceof GenerateOpenAIResponseError) {
 			throw error;

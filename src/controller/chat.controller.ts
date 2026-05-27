@@ -2,9 +2,11 @@ import { CreateChatError, CreateChatInDBError, GetChatByIdFromDBError, GetChatHi
 import { NotFoundError, UnauthorizedAccessError } from "../exceptions/common.exceptions";
 import { QueryChatLLMError } from "../exceptions/llm.exceptions";
 import { AddChatMessagesToDBError } from "../exceptions/message.exceptions";
+import { AddMessageMetadataToDBError } from "../exceptions/messageMetadata.exceptions";
 import { ConvertToEmbeddingsServiceError, QueryChatError } from "../exceptions/openai.exceptions";
 import { QueryPineconeServiceError, UpsertEmbeddingsToPineconeServiceError } from "../exceptions/pinecone.exceptions";
 import { createChatInDB, getChatByIdFromDB } from "../repository/chat.repository";
+import { addMessageMetadataToDB } from "../repository/messageMetadata.repository";
 import { addChatMessagesToDB, getChatMessagesFromDB } from "../repository/messages.repository";
 import type { IChatHistorySchema, IChatQuerySchema } from "../routes/chat.route";
 import { queryChatLLM } from "../services/llm.service";
@@ -59,12 +61,12 @@ export async function queryChat(payload: IChatQuerySchema) {
 			provider: payload.provider,
 		});
 		// save the query, response
-		const responseEmbeddings = await convertToEmbeddingsService(response);
-		await Promise.all([
+		const responseEmbeddings = await convertToEmbeddingsService(response.response);
+		const [chatMessage, _] = await Promise.all([
 			addChatMessagesToDB({
 				chatId: payload.chatId,
 				query: payload.query,
-				response,
+				response: response.response,
 				model: payload.model,
 				provider: payload.provider,
 			}),
@@ -72,23 +74,35 @@ export async function queryChat(payload: IChatQuerySchema) {
 				indexName: "olliveai-task",
 				metadata: {
 					chatId: payload.chatId,
-					text: `Query: ${payload.query}, Response: ${response}`,
+					text: `Query: ${payload.query}, Response: ${response.response}`,
 				},
 				vectors: responseEmbeddings,
 			}),
 		]);
+		await addMessageMetadataToDB({
+			chatId: payload.chatId,
+			messageId: chatMessage.messageId,
+			prompt: payload.query,
+			response: response.response,
+			tokens: response.tokens,
+			provider: payload.provider,
+			model: payload.model,
+			requestId: response.requestId,
+		});
 		// return the response
-		return response;
+		return response.response;
 	} catch (error) {
 		if (
 			error instanceof ConvertToEmbeddingsServiceError ||
 			error instanceof QueryPineconeServiceError ||
 			error instanceof QueryChatLLMError ||
 			error instanceof AddChatMessagesToDBError ||
-			error instanceof UpsertEmbeddingsToPineconeServiceError
+			error instanceof UpsertEmbeddingsToPineconeServiceError ||
+			error instanceof AddMessageMetadataToDBError
 		) {
 			throw error;
 		}
+		console.error(error);
 		throw new QueryChatError("Failed to query chat", { cause: (error as Error).message });
 	}
 }

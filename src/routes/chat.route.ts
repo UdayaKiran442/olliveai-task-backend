@@ -8,6 +8,7 @@ import { QueryPineconeServiceError, UpsertEmbeddingsToPineconeServiceError } fro
 import { AddChatMessagesToDBError } from "../exceptions/message.exceptions";
 import { QueryChatLLMError } from "../exceptions/llm.exceptions";
 import { NotFoundError, UnauthorizedAccessError } from "../exceptions/common.exceptions";
+import { AddMessageMetadataToDBError } from "../exceptions/messageMetadata.exceptions";
 
 const chatRoute = new Hono();
 
@@ -61,7 +62,8 @@ chatRoute.post("/query", async (c) => {
 			error instanceof QueryChatLLMError ||
 			error instanceof AddChatMessagesToDBError ||
 			error instanceof UpsertEmbeddingsToPineconeServiceError ||
-			error instanceof QueryChatError
+			error instanceof QueryChatError ||
+			error instanceof AddMessageMetadataToDBError
 		) {
 			return c.json({ success: false, error: error.message }, 401);
 		}
