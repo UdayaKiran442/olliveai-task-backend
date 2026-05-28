@@ -25,7 +25,7 @@ const FetchMessageMetadataSchema = z.object({
 
 export type IFetchMessageMetadataSchema = z.infer<typeof FetchMessageMetadataSchema> & { userId: string };
 
-messageMetadataRoute.post("/fetch-log", async (c) => {
+messageMetadataRoute.post("/fetch-log", authMiddleware, async (c) => {
 	try {
 		const validation = FetchMessageMetadataSchema.safeParse(await c.req.json());
 		if (!validation.success) {
@@ -33,7 +33,7 @@ messageMetadataRoute.post("/fetch-log", async (c) => {
 		}
         const payload = {
             ...validation.data,
-            userId: "user_3EFRtfVOgds9cLzWGFQzvXgebj0",
+            userId: c.get("user").userId,
         }
         const metadata = await getMessageMetadataById(payload);
         return c.json({ success: true, metadata });
