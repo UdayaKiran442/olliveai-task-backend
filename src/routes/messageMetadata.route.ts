@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { authMiddleware } from "../middleware/authentication.middleware";
-import { getMessageMetadataById, getMessageMetadataByUserId, updateMessageMetadata } from "../controller/messageMetadata.controller";
+import { getMessageMetadataById, getMessageMetadataByUserId, getUsageStats, updateMessageMetadata } from "../controller/messageMetadata.controller";
 import { GetMessageMetadataByUserIdError, GetMessageMetadataByUserIdFromDBError, UpdateMessageMetadataError, UpdateMessageMetadataInDBError } from "../exceptions/messageMetadata.exceptions";
 import z from "zod";
 
@@ -71,5 +71,15 @@ messageMetadataRoute.post("/update-metadata", authMiddleware, async (c) => {
 		return c.json({ success: false, message: "An unexpected error occurred", cause: (error as Error).message }, 500);
 	}
 });
+
+messageMetadataRoute.get("/fetch-usage-stats", authMiddleware, async (c) => {
+	try {
+		const userId = c.get("user").userId;
+		const stats = await getUsageStats(userId);
+		return c.json({ success: true, stats });
+	} catch (error) {
+		return c.json({ success: false, message: "An unexpected error occurred", cause: (error as Error).message }, 500);
+	}
+})
 
 export default messageMetadataRoute;

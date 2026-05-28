@@ -1,8 +1,16 @@
 import db from "./db";
 import { messageMetadata } from "./schema";
-import { AddMessageMetadataToDBError, GetMessageMetadataByIdFromDBError, GetMessageMetadataByUserIdFromDBError, UpdateMessageMetadataInDBError } from "../exceptions/messageMetadata.exceptions";
+import {
+	AddMessageMetadataToDBError,
+	GetAverageLatencyFromDBError,
+	GetMessageMetadataByIdFromDBError,
+	GetMessageMetadataByUserIdFromDBError,
+	GetNumberOfRequestsFromDBError,
+	GetThroughputFromDBError,
+	UpdateMessageMetadataInDBError,
+} from "../exceptions/messageMetadata.exceptions";
 import { nanoid } from "nanoid";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 
 export async function addMessageMetadataToDB(payload: {
 	messageId: string;
@@ -58,5 +66,43 @@ export async function updateMessageMetadataInDB(payload: { messageId: string; la
 		await db.update(messageMetadata).set({ latency: payload.latency }).where(eq(messageMetadata.messageId, payload.messageId));
 	} catch (error) {
 		throw new UpdateMessageMetadataInDBError("Failed to update message metadata in DB", { cause: (error as Error).message });
+	}
+}
+
+export async function getNumberOfRequestsFromDB(userId: string) {
+	try {
+		const countResult = await db.select().from(messageMetadata).where(eq(messageMetadata.userId, userId));
+		return countResult.length;
+	} catch (error) {
+		throw new GetNumberOfRequestsFromDBError("Failed to get number of requests from DB", { cause: (error as Error).message });
+	}
+}
+
+export async function getAverageLatencyFromDB(userId: string) {
+	try {
+		const result = await db
+			.select({
+				avgLatency: sql<number>`AVG(${messageMetadata.latency})`.mapWith(Number),
+			})
+			.from(messageMetadata)
+			.where(eq(messageMetadata.userId, userId));
+		return result[0].avgLatency;
+	} catch (error) {
+		throw new GetAverageLatencyFromDBError("Failed to get average latency from DB", { cause: (error as Error).message });
+	}
+}
+
+export async function getThroughputFromDB(userId: string) {
+	try {
+		const result = await db
+			.select({
+				count: sql<number>`COUNT(*)`.mapWith(Number),
+			})
+			.from(messageMetadata)
+			.where(eq(messageMetadata.userId, userId))
+			.groupBy(sql`DATE_TRUNC('hour', ${messageMetadata.timestamp})`);
+		return result[0].count;
+	} catch (error) {
+		throw new GetThroughputFromDBError("Failed to get throughput from DB", { cause: (error as Error).message });
 	}
 }

@@ -1,6 +1,22 @@
 import { NotFoundError, UnauthorizedAccessError } from "../exceptions/common.exceptions";
-import { GetMessageMetadataByIdError, GetMessageMetadataByIdFromDBError, GetMessageMetadataByUserIdError, UpdateMessageMetadataError, UpdateMessageMetadataInDBError } from "../exceptions/messageMetadata.exceptions";
-import { getMessageMetadataByIdFromDB, getMessageMetadataByUserIdFromDB, updateMessageMetadataInDB } from "../repository/messageMetadata.repository";
+import {
+	GetAverageLatencyFromDBError,
+	GetMessageMetadataByIdError,
+	GetMessageMetadataByIdFromDBError,
+	GetMessageMetadataByUserIdError,
+	GetNumberOfRequestsFromDBError,
+	GetStatsError,
+	UpdateMessageMetadataError,
+	UpdateMessageMetadataInDBError,
+} from "../exceptions/messageMetadata.exceptions";
+import {
+	getAverageLatencyFromDB,
+	getMessageMetadataByIdFromDB,
+	getMessageMetadataByUserIdFromDB,
+	getNumberOfRequestsFromDB,
+	getThroughputFromDB,
+	updateMessageMetadataInDB,
+} from "../repository/messageMetadata.repository";
 import type { IFetchMessageMetadataSchema } from "../routes/messageMetadata.route";
 
 export async function getMessageMetadataByUserId(userId: string) {
@@ -29,13 +45,36 @@ export async function getMessageMetadataById(payload: IFetchMessageMetadataSchem
 	}
 }
 
-export async function updateMessageMetadata(payload: {messageId: string; latency?: number}) {
+export async function updateMessageMetadata(payload: { messageId: string; latency?: number }) {
 	try {
-		await updateMessageMetadataInDB({messageId: payload.messageId, latency: payload.latency});
+		await updateMessageMetadataInDB({ messageId: payload.messageId, latency: payload.latency });
 	} catch (error) {
 		if (error instanceof UpdateMessageMetadataInDBError) {
 			throw error;
 		}
 		throw new UpdateMessageMetadataError("Failed to update message metadata", { cause: (error as Error).message });
+	}
+}
+
+export async function getUsageStats(userId: string) {
+	try {
+		// get number of requests
+		const numberOfRequests = await getNumberOfRequestsFromDB(userId);
+		// get average latency
+		const averageLatency = await getAverageLatencyFromDB(userId);
+
+		// get throughput (number of requests per minute)
+		const throughput = await getThroughputFromDB(userId);
+
+		return {
+			numberOfRequests,
+			averageLatency,
+			throughput,
+		};
+	} catch (error) {
+		if (error instanceof GetNumberOfRequestsFromDBError || error instanceof GetAverageLatencyFromDBError) {
+			throw error;
+		}
+		throw new GetStatsError("Failed to get usage stats", { cause: (error as Error).message });
 	}
 }
