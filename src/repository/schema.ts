@@ -1,4 +1,4 @@
-import { index, integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
 	userId: varchar("user_id").primaryKey(),
@@ -43,4 +43,8 @@ export const messageMetadata = pgTable("message_metadata", {
 	model: varchar("model").notNull(),
 	requestId: varchar("request_id").notNull(),
 	timestamp: timestamp("timestamp").notNull(),
-})
+}, (messageMetadata) => ({
+	messageIdIndex: uniqueIndex("message_id_index").on(messageMetadata.messageId),
+	userIdIndex: index("user_id_index").on(messageMetadata.userId),
+	chatIdIndex: index("chat_id_index").on(messageMetadata.chatId),
+}));
