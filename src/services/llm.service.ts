@@ -1,11 +1,11 @@
-
 import { QueryChatLLMError } from "../exceptions/llm.exceptions";
+import { GenerateOpenAIResponseError } from "../exceptions/openai.exceptions";
+import { GenerateSarvamResponseError } from "../exceptions/sarvam.exceptions";
 import { generateOpenAIResponse } from "./openai.service";
 import { generateSarvamResponse } from "./sarvam.service";
 
-export async function queryChatLLM(payload: { prompt: string; model: string; provider: string; history: string }): Promise<{ response: string; tokens: number; requestId: string }> {
+export async function queryChatLLM(payload: { prompt: string; model: string; provider: string; history: string }, isFallback = false): Promise<{ response: string; tokens: number; requestId: string }> {
 	try {
-		// write prompt template to send to llm
 		const prompt = [
 			{
 				role: "system",
@@ -25,13 +25,11 @@ export async function queryChatLLM(payload: { prompt: string; model: string; pro
 			},
 		];
 
-		// switch case for different llm providers and models
 		let response = "";
 		let tokens = 0;
 		let requestId = "";
 		switch (payload.provider) {
 			case "openai": {
-				// call openai api with prompt and model
 				const openAIResponse = await generateOpenAIResponse({ prompt, model: payload.model });
 				response = openAIResponse.response;
 				tokens = openAIResponse.tokens;
@@ -39,7 +37,6 @@ export async function queryChatLLM(payload: { prompt: string; model: string; pro
 				break;
 			}
 			case "sarvam": {
-				// call sarvam api with prompt and model
 				const sarvamResponse = await generateSarvamResponse({ prompt, model: payload.model });
 				response = sarvamResponse.response;
 				tokens = sarvamResponse.tokens;
@@ -47,9 +44,16 @@ export async function queryChatLLM(payload: { prompt: string; model: string; pro
 				break;
 			}
 		}
-		// return response from llm
-		return {response, tokens, requestId};
+		return { response, tokens, requestId };
 	} catch (error) {
+		if (!isFallback) {
+			if (error instanceof GenerateOpenAIResponseError) {
+				return queryChatLLM({ ...payload, provider: "sarvam", model: "sarvam-30b" }, true);
+			}
+			if (error instanceof GenerateSarvamResponseError) {
+				return queryChatLLM({ ...payload, provider: "openai", model: "gpt-4o-mini" }, true);
+			}
+		}
 		throw new QueryChatLLMError("Failed to get response from LLM", { cause: (error as Error).message });
 	}
 }
