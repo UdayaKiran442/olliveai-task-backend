@@ -2,7 +2,7 @@ import db from "./db";
 import { messageMetadata } from "./schema";
 import { AddMessageMetadataToDBError, GetMessageMetadataByUserIdFromDBError } from "../exceptions/messageMetadata.exceptions";
 import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export async function addMessageMetadataToDB(payload: {
 	messageId: string;
@@ -38,7 +38,7 @@ export async function addMessageMetadataToDB(payload: {
 
 export async function getMessageMetadataByUserIdFromDB(userId: string) {
 	try {
-		return await db.select().from(messageMetadata).where(eq(messageMetadata.userId, userId));
+		return await db.select().from(messageMetadata).where(eq(messageMetadata.userId, userId)).orderBy(desc(messageMetadata.timestamp));
 	} catch (error) {
 		throw new GetMessageMetadataByUserIdFromDBError("Failed to get message metadata by user ID from DB", { cause: (error as Error).message });
 	}
