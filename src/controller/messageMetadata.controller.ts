@@ -1,6 +1,6 @@
 import { NotFoundError, UnauthorizedAccessError } from "../exceptions/common.exceptions";
-import { GetMessageMetadataByIdError, GetMessageMetadataByIdFromDBError, GetMessageMetadataByUserIdError } from "../exceptions/messageMetadata.exceptions";
-import { getMessageMetadataByIdFromDB, getMessageMetadataByUserIdFromDB } from "../repository/messageMetadata.repository";
+import { GetMessageMetadataByIdError, GetMessageMetadataByIdFromDBError, GetMessageMetadataByUserIdError, UpdateMessageMetadataError, UpdateMessageMetadataInDBError } from "../exceptions/messageMetadata.exceptions";
+import { getMessageMetadataByIdFromDB, getMessageMetadataByUserIdFromDB, updateMessageMetadataInDB } from "../repository/messageMetadata.repository";
 import type { IFetchMessageMetadataSchema } from "../routes/messageMetadata.route";
 
 export async function getMessageMetadataByUserId(userId: string) {
@@ -26,5 +26,16 @@ export async function getMessageMetadataById(payload: IFetchMessageMetadataSchem
 			throw error;
 		}
 		throw new GetMessageMetadataByIdError("Failed to get message metadata by ID", { cause: (error as Error).message });
+	}
+}
+
+export async function updateMessageMetadata(payload: {messageId: string; latency?: number}) {
+	try {
+		await updateMessageMetadataInDB({messageId: payload.messageId, latency: payload.latency});
+	} catch (error) {
+		if (error instanceof UpdateMessageMetadataInDBError) {
+			throw error;
+		}
+		throw new UpdateMessageMetadataError("Failed to update message metadata", { cause: (error as Error).message });
 	}
 }

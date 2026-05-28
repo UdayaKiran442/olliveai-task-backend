@@ -50,6 +50,13 @@
       "when": 1779876311935,
       "tag": "0006_crazy_spiral",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779954835810,
+      "tag": "0007_superb_veda",
+      "breakpoints": true
     }
   ]
 }

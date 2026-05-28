@@ -1,4 +1,4 @@
-import { index, integer, pgTable, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { decimal, index, integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
 	userId: varchar("user_id").primaryKey(),
@@ -27,7 +27,7 @@ export const messages = pgTable(
 		createdAt: timestamp("created_at").notNull(),
 	},
 	(messages) => ({
-		chatIdIndex: index("chat_id_index").on(messages.chatId),
+		chatIdIndex: index("chat_id_messages_index").on(messages.chatId),
 	}),
 );
 
@@ -42,9 +42,12 @@ export const messageMetadata = pgTable("message_metadata", {
 	provider: varchar("provider").notNull(),
 	model: varchar("model").notNull(),
 	requestId: varchar("request_id").notNull(),
+	latency: decimal("latency", { mode: "number" }),
+	status: varchar("status"),
 	timestamp: timestamp("timestamp").notNull(),
 }, (messageMetadata) => ({
-	messageIdIndex: uniqueIndex("message_id_index").on(messageMetadata.messageId),
-	userIdIndex: index("user_id_index").on(messageMetadata.userId),
-	chatIdIndex: index("chat_id_index").on(messageMetadata.chatId),
+	messageIdIndex: index("message_id_metadata_index").on(messageMetadata.messageId),
+	userIdIndex: index("user_id_metadata_index").on(messageMetadata.userId),
+	chatIdIndex: index("chat_id_metadata_index").on(messageMetadata.chatId),
 }));
+

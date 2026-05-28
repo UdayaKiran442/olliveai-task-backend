@@ -47,3 +47,23 @@ export class GetMessageMetadataByIdError extends Error {
 		Error.captureStackTrace(this, this.constructor);
 	}
 }
+
+export class UpdateMessageMetadataInDBError extends Error {
+	public cause?: unknown;
+	constructor(message: string, options?: { cause?: unknown }) {
+		super(message);
+		this.name = "UpdateMessageMetadataInDBError";
+		if (options?.cause) this.cause = options.cause;
+		Error.captureStackTrace(this, this.constructor);
+	}
+}
+
+export class UpdateMessageMetadataError extends Error {
+	public cause?: unknown;
+	constructor(message: string, options?: { cause?: unknown }) {
+		super(message);
+		this.name = "UpdateMessageMetadataError";
+		if (options?.cause) this.cause = options.cause;
+		Error.captureStackTrace(this, this.constructor);
+	}
+}
