@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: olliveai-task-backend-deployment
+  labels:
+    app: olliveai-task-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: olliveai-task-backend
+  template:
+    metadata:
+      labels:
+        app: olliveai-task-backend
+    spec:
+      containers:
+      - name: olliveai-task-backend
+        image: olliveai-task-backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
